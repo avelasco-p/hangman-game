@@ -7,6 +7,7 @@ function read_char() {
 function check_char_in_word() {
 	#number of occurances of char in word 
 	positions=$(echo $word | grep -iob $char | grep -oE "^[0-9]+")
+	#return statis of last command runned (grep), if it didnt find anything (no char matched in the pattern) it retuns 1 (it failed), if it found something, it returns 0
 	return $?
 }
 
@@ -16,13 +17,10 @@ function read_word() {
 
 read_word 
 read_char
-
 echo ""
-
 check_char_in_word
 
 if [[ $? == 0 ]]; then
-	#statements
 	echo "posiciones en las que se encontro: " $positions
 else
 	echo "no se encontro el caracter"
