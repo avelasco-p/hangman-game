@@ -1,2 +1,30 @@
 #!/usr/bin/env bash
 
+function read_char() {
+	read -n 1 -p "ingrese el caracter: " char
+}
+
+function check_char_in_word() {
+	#number of occurances of char in word 
+	positions=$(echo $word | grep -iob $char | grep -oE "^[0-9]+")
+	return $?
+}
+
+function read_word() {
+	read -p "ingrese la palabra: " word
+}
+
+read_word 
+read_char
+
+echo ""
+
+check_char_in_word
+
+if [[ $? == 0 ]]; then
+	#statements
+	echo "posiciones en las que se encontro: " $positions
+else
+	echo "no se encontro el caracter"
+fi
+
