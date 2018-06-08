@@ -11,7 +11,8 @@ function login() {
 	if [[ -z $result ]]; then
 		echo "cant find a player with that nickname or paswd"
 	else
-		exec "~/Documents/Universidad/Codigo Abierto/hangman-game/src/hangman.sh"
+		#must be executed from the same folder
+		exec "./hangman.sh"
 	fi
 }
 
