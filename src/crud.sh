@@ -89,9 +89,6 @@ function update_word() {
 
 }
 
-update_word at lobor 1
-
-
 
 #arguments: (player_id)
 #	player_nickname: the id of the player
