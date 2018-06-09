@@ -112,28 +112,6 @@ function update_score() {
 
 }
 
-#arguments: (player_id)
-#	player_nickname: the id of the player
-#-------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (player_id, player_nickname, player_score)
-#	player_words: contains a list of all the words from a single player (player provided as the argument)
-#-------------------------------------------------------------------------------------------------------------------------------------------
-#return:
-#	0: everything was successfull	
-#	1: query wasnt successfull
-function get_words_of_player() {
-	local result=$(psql -t -U postgres -d hangman_db -c "SELECT word FROM word WHERE player_id=$1;")
-
-	if [[ -z $result ]]; then
-		return 1
-	fi
-
-	#variable to hold player's words
-	player_words=$(echo $result | sed 's/\s|\s/ /g' )
-
-	return 0
-}
-
 #arguments: (nickname,password)
 #-------------------------------------------------------------------------------------------------------------------------------------------
 #variables: (player_id, player_nickname, player_score)
@@ -167,6 +145,28 @@ function get_player() {
 
 		i=$(($i + 1))
 	done
+
+	return 0
+}
+
+#arguments: (player_id)
+#	player_nickname: the id of the player
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (player_id)
+#	player_id: id of the player
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#return:
+#	0: everything was successfull	
+#	1: query wasnt successfull
+function get_player_words() {
+	local result=$(psql -t -U postgres -d hangman_db -c "SELECT word FROM word WHERE player_id=$1;")
+
+	if [[ -z $result ]]; then
+		return 1
+	fi
+
+	#variable to hold player's words
+	player_words=$(echo $result | sed 's/\s|\s/\n/g' )
 
 	return 0
 }
