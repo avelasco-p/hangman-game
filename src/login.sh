@@ -20,8 +20,11 @@ function login() {
 	local login_result=$(get_player $nickname $passwd)
 
 	if [[ $? == 1 ]]; then
+		clear
 		return 1
 	else
 		return 0
 	fi
 }
+
+login
