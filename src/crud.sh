@@ -106,7 +106,6 @@ function update_score() {
 	if [[ -z $result ]]; then
 		return 1
 	else
-		echo $result
 		return 0
 	fi
 
@@ -166,7 +165,7 @@ function get_player_words() {
 	fi
 
 	#variable to hold player's words
-	player_words=$(echo $result | sed 's/\s|\s/\n/g' )
+	player_words=($(echo $result | sed 's/\s|\s/\n/g'))
 
 	return 0
 }
