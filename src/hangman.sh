@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-source './login.sh'
-source './crud.sh'
+source ./login.sh
+source ./crud.sh
 
 # detects the existence of a character in a string
 # echoes the position in which they where found
@@ -68,5 +68,3 @@ for (( i = 0; i < 5; i++ )); do
 		echo "error loging in, try again (tries left: $((5-$i)))"
 	fi
 done
-
-
