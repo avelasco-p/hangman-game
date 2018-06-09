@@ -10,7 +10,7 @@
 #------------------------------------------------------------------------------------------------------------------------------------------
 #first argument is nickname, second argument is the password (not encrypted)
 #------------------------------------------------------------------------------------------------------------------------------------------
-function create_player() {
+function insert_player() {
 	result=$(psql -t -U postgres -d hangman_db -c "INSERT INTO player (nickname, password) values ('$1', MD5('$2'));")
 	if [[ -z $result ]]; then
 		return 1
@@ -31,7 +31,7 @@ function create_player() {
 #------------------------------------------------------------------------------------------------------------------------------------------
 #first argument is the word to add, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
-function create_word() {
+function insert_word() {
 	result=$(psql -t -U postgres -d hangman_db -c "INSERT INTO word (word, player_id) values ('$1','$2');")
 
 	if [[ -z $result ]]; then
@@ -64,6 +64,34 @@ function delete_word() {
 	fi
 
 }
+
+#arguments: (old_word, new_word, player_id)
+#	word: the word to be added
+#	player_id: the id of the logged in player that wants to add a new word
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables:
+#	result: contains the tuple result of the psql query
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the word to update, the second argument is the player's id (logged in)
+#------------------------------------------------------------------------------------------------------------------------------------------
+function update_word() {
+	result=$(psql -t -U postgres -d hangman_db -c "UPDATE word SET word='$2' WHERE word='$1' AND player_id=$3")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		echo $result
+		return 0
+	fi
+
+}
+
+update_word at lobor 1
+
+
 
 #arguments: (player_id)
 #	player_nickname: the id of the player
