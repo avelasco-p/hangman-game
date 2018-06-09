@@ -15,54 +15,8 @@ function create_player() {
 	if [[ -z $result ]]; then
 		return 1
 	else
-		echo $result
 		return 0
 	fi
-}
-
-
-#arguments: (<none>)
-#-------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (result, players, cant_players)
-#	result: contains the tuple result of the psql query
-#	players: list of players, each element of the list is a string composed by id, nickname and score of each player, each separated by comma
-#	cant_players: number of players in db
-#-------------------------------------------------------------------------------------------------------------------------------------------
-#return:
-#	0: everything was successfull	
-#	1: query wasnt successfull
-function get_players() {
-	result=$(psql -t -U postgres -d hangman_db -c "SELECT id, nickname, score FROM player;")
-
-	if [[ -z $result ]]; then
-		return 1
-	fi
-
-	#separating each part of the result table as a single line, each column separated by space
-	result_list=$(echo $result | sed 's/\s|\s/ /g' )
-
-	#each player will be composed as a single string, each column delimited by comma (id,nickname,score)
-	players=()
-
-	#every 3 words (cols) theres a new player (id, nickname, score)
-	i=0
-	player=""
-	for col in $result_list; do
-		i=$(($i + 1))
-		player="$player$col"
-		
-		if [[ $(($i % 3)) == 0 ]]; then
-			players+=("$player")
-			player=()
-		else
-			player="$player,"
-		fi
-	done
-
-	#defining cant_players variable
-	cant_players=$(($i/3))
-
-	return 0
 }
 
 #arguments: (word,player_id)
@@ -98,7 +52,7 @@ function create_word() {
 #	0: query was successfull
 #	1: query wasnt successfull
 #------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is the word to add, the second argument is the player's id (logged in)
+#first argument is the word to delete, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function delete_word() {
 	result=$(psql -t -U postgres -d hangman_db -c "DELETE FROM word WHERE word='$1' AND player_id='$2")
@@ -111,5 +65,45 @@ function delete_word() {
 
 }
 
-#create_player velasco 1234
-get_players
+#arguments: (nickname,password)
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (player_id, player_nickname, player_score)
+#	player_id: contains the player id
+#	player_nickname: contains the nickname of the player
+#	player_score: contains the player score
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#return:
+#	0: everything was successfull	
+#	1: query wasnt successfull
+function get_player() {
+	local result=$(psql -t -U postgres -d hangman_db -c "SELECT id, nickname, score FROM player WHERE nickname='$1' AND password=MD5('$2');")
+
+	if [[ -z $result ]]; then
+		return 1
+	fi
+
+	#separating each part of the result table as a single line, each column separated by space
+	local result_list=$(echo $result | sed 's/\s|\s/ /g' )
+
+	#getting player variables
+	local i=0
+	for var in $result_list; do
+		if [[ $i == 0 ]]; then
+			player_id=$var
+		elif [[ $i == 1 ]]; then
+			player_nickname=$var
+		else
+			player_score=$var
+		fi
+
+		i=$(($i + 1))
+	done
+
+	return 0
+}
+
+get_player root root
+
+#echo $player_id
+#echo $player_nickname
+#echo $player_score
