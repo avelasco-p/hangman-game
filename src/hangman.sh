@@ -35,17 +35,20 @@ function show_menu {
 }
 
 function hangman {
-	tries=10;
+	#player_Score has the number of points left
+	#tries=$player_score;
 	word="$1";
 	word_aux="${word//[A-Za-z0-9]/_}";
 
-	while [[ "$tries" -gt 0 && "$word_aux" != "$word" ]]; do
-		show_menu "$tries";
+	while [[ "$player_score" -gt 0 && "$word_aux" != "$word" ]]; do
+		show_menu "$player_score";
 		read -n 1 -p "enter a letter: " char;
 		positions=($(find_in_word "$1" "$char"));
 
 		if [[ ${#positions[@]} -eq 0 ]]; then
-			tries=$(($tries - 1));
+			#tries=$(($tries - 1));
+			player_score=$(($player_score - 1))
+			update_score $player_id $player_score
 		else
 			positions_str=$(echo "${positions[*]}");
 			word_aux=$(place_guess "$positions_str" "$word_aux" "$char");
@@ -53,13 +56,13 @@ function hangman {
 	done
 
 	# show menu one last time
-	show_menu "$tries";
+	show_menu "$player_score";
 	[[ "$word_aux" == "$word" ]] && echo "You won!"
-	[[ "$tries" -eq 0 ]] && echo "Lost!, the word was: $word"
+	[[ "$player_score" -eq 0 ]] && echo "Lost!, the word was: $word"
 }
 
 
-for (( i = 0; i < 5; i++ )); do
+for (( i = 0; i <=5; i++ )); do
 	login
 	if [[ $? == 0 ]]; then
 		hangman "$(cat /usr/share/dict/cracklib-small | sort -R | head -n1)";
