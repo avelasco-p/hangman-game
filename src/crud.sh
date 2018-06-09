@@ -89,6 +89,28 @@ function update_word() {
 
 }
 
+#arguments: (player_id, new_score)
+#	player_id: id of the player to update score
+#	new_score: new score of the player
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables:
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the word to update, the second argument is the player's id (logged in)
+#------------------------------------------------------------------------------------------------------------------------------------------
+function update_score() {
+	result=$(psql -t -U postgres -d hangman_db -c "UPDATE player SET score=$2 WHERE id=$1")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		echo $result
+		return 0
+	fi
+
+}
 
 #arguments: (player_id)
 #	player_nickname: the id of the player
