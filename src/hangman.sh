@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source './login.sh'
 
 # detects the existence of a character in a string
 # echoes the position in which they where found
@@ -56,4 +57,11 @@ function hangman {
 	[[ "$tries" -eq 0 ]] && echo "Lost!, the word was: $word"
 }
 
-hangman "$(cat /usr/share/dict/cracklib-small | sort -R | head -n1)";
+login
+
+if [[ -z $result ]]; then
+	echo "cant find a player with the credentials provided"
+else
+	hangman "$(cat /usr/share/dict/cracklib-small | sort -R | head -n1)";
+fi
+
