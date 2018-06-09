@@ -57,17 +57,24 @@ function hangman {
 
 	# show menu one last time
 	show_menu "$player_score";
-	[[ "$word_aux" == "$word" ]] && echo "You won!"
+	[[ "$word_aux" == "$word" ]] && player_score=$((player_score + 10)) && echo "You won!" && echo "New score: $player_score" && update_score $player_id $player_score
 	[[ "$player_score" -eq 0 ]] && echo "Lost!, the word was: $word"
 }
 
-
-for (( i = 0; i <=5; i++ )); do
+#logging in
+logged=0
+while [[ $logged == 0 ]]; do
 	login
 	if [[ $? == 0 ]]; then
-		hangman "$(cat /usr/share/dict/cracklib-small | sort -R | head -n1)";
-		break
+		logged=1
 	else
-		echo "error loging in, try again (tries left: $((5-$i)))"
+		echo "error loging in, try again"
 	fi
 done
+
+#preparing game environment
+word_index=$(($RANDOM % $player_score))
+get_player_words $player_id 
+
+#starting game
+hangman "$(echo ${player_words[$word_index]})";
