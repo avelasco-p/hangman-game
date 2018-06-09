@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source ./crud.sh
+source './crud.sh'
 
 #database name hangman_db
 #password handled by pgpass file
@@ -17,14 +17,11 @@ function login() {
 	read -p "enter your nickname: " nickname
 	read -s -p "enter your passwod: " passwd
 	echo ""
-	local login_result=$(get_player $nickname $passwd)
+	get_player $nickname $passwd
 
-	if [[ $? == 1 ]]; then
-		clear
+	if [[ -z $player_id ]]; then
 		return 1
 	else
 		return 0
 	fi
 }
-
-login
