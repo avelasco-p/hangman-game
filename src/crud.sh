@@ -102,7 +102,7 @@ function get_player() {
 	return 0
 }
 
-get_player root root
+
 
 #echo $player_id
 #echo $player_nickname
