@@ -54,7 +54,7 @@ function insert_player() {
 #	usr_id: usr id that owns the word
 #------------------------------------------------------------------------------------------------------------------------------------------
 #variables: (curr_word)
-#	curr_word: word found returned as a list of strings
+#	curr_word: word found returned as a list of strings (id_palabra, palabra,puntos,usr)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
@@ -161,11 +161,10 @@ function insert_word_x_score() {
 }
 
 #arguments: (score,usr,date,words)
-#	score: new score
-#	usr: the usr_id, a varchar (primary key of login table)
-#	date: the date of the new score
-#	words: the list of words guessed in the session 
-#	game_id: the id of the new score
+#	score: new score::integer
+#	usr: the usr_id, a varchar (primary key of login table)::string
+#	words: the list of words guessed in the session::list<string> 
+#	game_id: the id of the new score (game session)::integer
 #------------------------------------------------------------------------------------------------------------------------------------------
 #variables: (none)
 #return:
@@ -176,14 +175,14 @@ function insert_word_x_score() {
 #	the third argument is the date of transaction, the 4th argument is the list of words in the session
 #------------------------------------------------------------------------------------------------------------------------------------------
 function insert_score() {
-	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO puntaje (puntaje, usr, date) values ('$1','$2', '$3');")
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO puntaje (puntaje, usr) values ('$1','$2');")
 
 	if [[ -z $result ]]; then
 		return 1
 	else
-		for word in $4; do
+		for word in $3; do
 			get_word $word $2 #saves the word cols into curr_word var 
-			insert_word_x_score ${curr_word[0]} $5
+			insert_word_x_score ${curr_word[0]} $4
 		done
 		return 0
 	fi
