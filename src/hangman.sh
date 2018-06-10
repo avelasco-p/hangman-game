@@ -1,80 +1,93 @@
 #!/usr/bin/env bash
-source ./login.sh
-source ./crud.sh
+DIR="$(dirname "$(readlink -f "$0")")";
 
-# detects the existence of a character in a string
-# echoes the position in which they where found
-function find_in_word {
-	echo "$(echo $1 | grep -iob $2 | grep -oE '^[0-9]+')";
-}
+source "$DIR/db/crud.sh"
+source "$DIR/res/art.sh"
+source "$DIR/proc/util.sh"
+source "$DIR/proc/game.sh"
 
-# more on this function here:
-# https://zaiste.net/how_to_join_elements_of_an_array_in_bash
-# more on the shift command
-# http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_09_07.html
-# takes element in an array and produces a string with joint elements
-function join {
-	local IFS="$1"; shift; echo "$*";
-}
-
-function place_guess {
-	# converting word into array of chars
-	new_word_aux=($(echo $2 | grep -o .));
-
-	for pos in $1; do
-		new_word_aux[$pos]="$3";
-	done
-
-	echo "$(join '' ${new_word_aux[@]})";
-}
-
-function show_menu {
+function user_menu {
+	local opt, input;
 	clear;
-	echo "$word_aux";
-	echo "tries left: $1";
+	draw_logo;
+	echo -e "\nWelcome: $1"
+	echo -e "1. Play";
+	echo -e "2. See my scores (date)";
+	echo -e "3. See my scores (high score)";
+	echo -e "4. See all scores";
+	echo -e "5. Add a word";
+	echo -e "6. Remove a word";
+	echo -e "0. Exit";
+	echo -en "\tChoose an option: ";
+	read -n2 opt;
+	case $opt in
+		1)
+			hangman "$1";
+			;;
+		2)
+			get_user_scores "$1" "fecha";
+			read -n1 -p "Press any key to continue...";
+			;;
+		3)
+			get_user_scores "$1" "puntaje";
+			read -n1 -p "Press any key to continue...";
+			;;
+		4)
+			get_scores;
+			read -n1 -p "Press any key to continue...";
+			;;
+		5)
+			read -p "Insert a new word: " input;
+			insert_word "$input" "$1";
+			[[ "$?" -eq 0 ]] && echo "Word added successfully";
+			sleep 1;
+			;;
+		6)
+			echo "$(sql "SELECT id_palabra, palabra from palabra where usr='$1'")";
+			read -p "Input the id to delete: " input;
+			delete_word "$input" "$1";
+			[[ "$?" -eq 0 ]] && echo "Word deleted successfully";
+			sleep 1;
+			;;
+		0) exit 0 ;;
+		*) echo "not a valid option" ;;
+	esac
+	user_menu "$1";
 }
 
-function hangman {
-	#player_Score has the number of points left
-	#tries=$player_score;
-	word="$1";
-	word_aux="${word//[A-Za-z0-9]/_}";
-
-	while [[ "$player_score" -gt 0 && "$word_aux" != "$word" ]]; do
-		show_menu "$player_score";
-		read -n 1 -p "enter a letter: " char;
-		positions=($(find_in_word "$1" "$char"));
-
-		if [[ ${#positions[@]} -eq 0 ]]; then
-			#tries=$(($tries - 1));
-			player_score=$(($player_score - 1))
-			update_score $player_id $player_score
-		else
-			positions_str=$(echo "${positions[*]}");
-			word_aux=$(place_guess "$positions_str" "$word_aux" "$char");
-		fi
-	done
-
-	# show menu one last time
-	show_menu "$player_score";
-	[[ "$word_aux" == "$word" ]] && player_score=$((player_score + 10)) && echo "You won!" && echo "New score: $player_score" && update_score $player_id $player_score
-	[[ "$player_score" -eq 0 ]] && echo "Lost!, the word was: $word"
+function menu {
+	local opt;
+	clear;
+	draw_logo;
+	echo -e "\n1. Login";
+	echo -e "2. Register";
+	echo -e "3. See Scores";
+	echo -e "0. Exit";
+	echo -en "\tChoose an option: ";
+	read -n2 opt;
+	case $opt in
+		1)
+			user="$(login_loop)";
+			[[ ! -z "$user" ]] && user_menu "$user";
+			;;
+		2)
+			register;
+			if [[ "$?" -eq 0 ]]; then
+				echo -e "\nregister complete!";
+				sleep 1;
+			else
+				echo -e "\nregister unsuccessfull";
+				sleep 1;
+			fi
+			;;
+		3)
+			get_scores;
+			read -n1 -p "Press any key to continue...";
+			;;
+		0) exit 0 ;;
+		*) echo "not a valid option" ;;
+	esac
+	menu;
 }
 
-#logging in
-logged=0
-while [[ $logged == 0 ]]; do
-	login
-	if [[ $? == 0 ]]; then
-		logged=1
-	else
-		echo "error loging in, try again"
-	fi
-done
-
-#preparing game environment
-word_index=$(($RANDOM % $player_score))
-get_player_words $player_id 
-
-#starting game
-hangman "$(echo ${player_words[$word_index]})";
+menu;
