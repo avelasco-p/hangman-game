@@ -187,7 +187,7 @@ function insert_score {
 	if [[ -z $result ]]; then
 		return 1
 	else
-		for id in $id_list; do
+		for id in "${id_list[@]}"; do
 			insert_word_x_score "$id" "$(echo "$last_score" | sed s/\s//g)";
 		done
 		return 0
