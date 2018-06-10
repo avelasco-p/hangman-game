@@ -1,3 +1,4 @@
+#!/usr/bin/bash
 
 # detects the existence of a character in a string
 # echoes the position in which they where found
@@ -27,25 +28,23 @@ function place_guess {
 
 function show_progress {
 	clear;
-	echo "$word_aux";
-	echo "tries left: $1";
+	echo "$1";
+	echo "points left: $2";
 }
 
-function hangman {
-	#player_Score has the number of points left
-	#tries=$player_score;
+function do_round {
+	local word word_aux score;
 	word="$1";
 	word_aux="${word//[A-Za-z0-9]/_}";
+	score="$2";
 
-	while [[ "$player_score" -gt 0 && "$word_aux" != "$word" ]]; do
-		show_progress "$player_score";
+	while [[ "$score" -gt 0 && "$word_aux" != "$word" ]]; do
+		show_progress "$word_aux" "$score";
 		read -n 1 -p "enter a letter: " char;
 		positions=($(find_in_word "$1" "$char"));
 
 		if [[ ${#positions[@]} -eq 0 ]]; then
-			#tries=$(($tries - 1));
-			player_score=$(($player_score - 1))
-			update_score $player_id $player_score
+			score=$(($score - 10));
 		else
 			positions_str=$(echo "${positions[*]}");
 			word_aux=$(place_guess "$positions_str" "$word_aux" "$char");
@@ -53,12 +52,32 @@ function hangman {
 	done
 
 	# show menu one last time
-	show_menu "$player_score";
+	show_progress "$score";
 	if [[ "$word_aux" == "$word" ]]; then
-		player_score=$((player_score + 10));
-		echo "You won!";
-		echo "New score: $player_score";
-		update_score "$player_id" "$player_score"
+		score=$(($score + $2));
+		return $(($score));
+	elif [[ "$score" -eq 0 ]]; then
+		return 0;
 	fi
-	[[ "$player_score" -eq 0 ]] && echo "Lost!, the word was: $word"
+}
+
+
+function hangman {
+	local score words words_ids;
+	score=0;
+	words=($(get_player_words "$1"));
+	word_ids=();
+
+	continue="y";
+	while [[ $continue == "y" ]]; do
+		word_index=$(($RANDOM % ${#words[@]}));
+		params=($(echo ${words[$word_index]} | sed 's/-/\ /g'));
+		word_ids+=(${params[2]});
+
+		do_round "${params[0]}" $(("$score" + "${params[1]}"));
+		score=$(("$score" + "$?"));
+		read -n1 -p "continue? (y/n): " continue;
+	done	
+
+	insert_score "$score" "$1" "$word_ids";
 }
