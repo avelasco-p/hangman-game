@@ -181,14 +181,14 @@ function insert_word_x_score {
 #---------------------------------------------------------------------
 function insert_score {
 	local result=$(sql "INSERT INTO puntaje (puntaje, usr) values ('$1','$2');")
-	local last_score=$(sql "SELECT id_puntaje from puntaje WHERE usr=$2 order by id DESC LIMIT 1;")
+	local last_score=$(sql "SELECT id_puntaje from puntaje WHERE usr='$2' order by id_puntaje DESC LIMIT 1;")
 	id_list=("$3");
 
 	if [[ -z $result ]]; then
 		return 1
 	else
 		for id in $id_list; do
-			insert_word_x_score "$id" "$(echo last_score | sed s/\s//g)";
+			insert_word_x_score "$id" "$(echo "$last_score" | sed s/\s//g)";
 		done
 		return 0
 	fi
@@ -201,7 +201,7 @@ function insert_score {
 #	1: query wasnt successfull
 #---------------------------------------------------------------------
 function get_scores {
-	local result="$(sql "SELECT usr, puntaje, fecha from puntaje ORDER BY puntaje DESC;")"
+	local result="$(sql "SELECT usr, puntaje from puntaje ORDER BY puntaje DESC;")"
 	if [[ -z "$result" ]]; then
 		return 1;
 	fi
