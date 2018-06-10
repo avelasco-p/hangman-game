@@ -27,19 +27,35 @@ function place_guess {
 }
 
 function show_progress {
+	local diff progress;
 	clear;
+	draw_logo;
+	echo "";
+
+	diff=$(("$3" - "$2"));
+	progress=$(("$3" / "${#criminal[@]}"));
+	progress=$(("$diff" / "$progress"));
+
+	for line in "${criminal[@]:0:$progress}"; do
+		if [[ "$progress" -eq "${#criminal[@]}" ]]; then
+			echo "$line" | sed 's/o/x/g';
+		else
+			echo "$line"
+		fi
+	done
 	echo "$1";
 	echo "points left: $2";
 }
 
 # score is in global scope, defined in hangman
 function do_round {
-	local word word_aux;
+	local word word_aux score_aux;
 	word="$1";
 	word_aux="${word//[A-Za-z0-9]/_}";
+	score_aux="$score"
 
 	while [[ "$score" -gt 0 && "$word_aux" != "$word" ]]; do
-		show_progress "$word_aux" "$score";
+		show_progress "$word_aux" "$score" "$score_aux";
 		read -n 1 -p "enter a letter: " char;
 		positions=($(find_in_word "$1" "$char"));
 
@@ -52,7 +68,7 @@ function do_round {
 	done
 
 	# show menu one last time
-	show_progress "$score";
+	show_progress "$word_aux" "$score" "$score_aux";
 }
 
 
@@ -71,13 +87,14 @@ function hangman {
 	while [[ $continue == "y" ]]; do
 		word_index=$(($RANDOM % ${#words[@]}));
 		params=($(echo ${words[$word_index]} | sed 's/-/\ /g'));
-		word_ids+=(${params[2]});
+		word_ids+=("${params[2]}");
 
 		score=$(("$score" + "${params[1]}"));
 		do_round "${params[0]}" "$score";
 		if [[ "$score" -eq 0 ]]; then
 			echo "You lost!";
 			continue="n";
+			read -n1 -p "Press any key to go back to menu..."
 		else
 			read -n1 -p "continue? (y/n): " continue;
 		fi
