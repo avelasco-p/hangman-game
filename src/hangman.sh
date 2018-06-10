@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 DIR="$(dirname "$(readlink -f "$0")")";
 
-source "$DIR/crud.sh"
-source "$DIR/art.sh"
-source "$DIR/util.sh"
-source "$DIR/game.sh"
+source "$DIR/db/crud.sh"
+source "$DIR/res/art.sh"
+source "$DIR/proc/util.sh"
+source "$DIR/proc/game.sh"
 
 function user_menu {
 	local opt, input;
