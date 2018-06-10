@@ -43,7 +43,8 @@ function show_progress {
 			echo "$line"
 		fi
 	done
-	echo "$1";
+	echo ""
+	echo -e "\t$1";
 	echo "points left: $2";
 }
 
