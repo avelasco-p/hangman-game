@@ -21,6 +21,9 @@ function user_menu {
 	echo -en "\tChoose an option: ";
 	read -n2 opt;
 	case $opt in
+		1)
+			hangman "$1";
+			;;
 		2)
 			get_user_scores "$1" "fecha";
 			read -n1 -p "Press any key to continue...";
@@ -87,10 +90,4 @@ function menu {
 	menu;
 }
 
-#preparing game environment
-# word_index=$(($RANDOM % $player_score))
-# get_player_words "${user[0]}" 
-
-#starting game
-# hangman "${player_words[$word_index]}";
 menu;
