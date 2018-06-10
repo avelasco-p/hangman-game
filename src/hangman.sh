@@ -21,6 +21,14 @@ function user_menu {
 	echo -en "\tChoose an option: ";
 	read -n2 opt;
 	case $opt in
+		2)
+			get_user_scores "$1" "fecha";
+			read -n1 -p "Press any key to continue...";
+			;;
+		3)
+			get_user_scores "$1" "puntaje";
+			read -n1 -p "Press any key to continue...";
+			;;
 		4)
 			get_scores;
 			read -n1 -p "Press any key to continue...";

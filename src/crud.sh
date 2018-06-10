@@ -194,9 +194,36 @@ function insert_score {
 	fi
 }
 
+#arguments: ()
+#---------------------------------------------------------------------
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#---------------------------------------------------------------------
 function get_scores {
-	local result="$(sql "SELECT usr, puntaje, fecha from puntaje ORDER BY puntaje ASC;")"
-	echo "$result" | sed 's/\s|\s/ /g';
+	local result="$(sql "SELECT usr, puntaje, fecha from puntaje ORDER BY puntaje DESC;")"
+	if [[ -z "$result" ]]; then
+		return 1;
+	else
+		echo "$result" | sed 's/\s|\s/ /g';
+		return 0;
+	fi
+}
+
+#arguments: (usr, order)
+#---------------------------------------------------------------------
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#---------------------------------------------------------------------
+function get_user_scores {
+	local result="$(sql "SELECT puntaje, fecha from puntaje WHERE usr='$1' ORDER BY $2 DESC")"
+	if [[ -z "$result" ]]; then
+		return 1;
+	else
+		echo "$result" | sed 's/\s|\s/ /g';
+		return 0;
+	fi
 }
 
 
