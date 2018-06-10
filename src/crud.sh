@@ -135,7 +135,7 @@ function update_word {
 #first argument is the word to delete, the second argument is the player's id (logged in)
 #---------------------------------------------------------------------
 function delete_word {
-	local result="$(sql "DELETE FROM palabra WHERE palabra='$1' AND usr='$2';")";
+	local result="$(sql "DELETE FROM palabra WHERE id_palabra='$1' AND usr='$2';")";
 
 	if [[ -z $result ]]; then
 		return 1
