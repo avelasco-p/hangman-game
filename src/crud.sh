@@ -3,6 +3,30 @@
 database_name="hangman"
 usr_max_size=15
 
+#this functions is used to log in
+#arguments: (usr,pwd)
+#	usr: the usr id (or nickname) to log in
+#	pwd: the password
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (player_id)
+#	usr_id: contains the id of the logged in player
+#-------------------------------------------------------------------------------------------------------------------------------------------
+#return:
+#	0: everything was successfull	
+#	1: query wasnt successfull
+function get_player() {
+	local result=$(psql -t -U postgres -d hangman -c "SELECT usr FROM login WHERE usr='$1' AND pwd=MD5('$2');")
+
+	if [[ -z $result ]]; then
+		return 1
+	fi
+
+	#separating each part of the result table as a single line, each column separated by space
+	usr_id=$(echo $result | sed 's/\s|\s/ /g' )
+	
+	return 0
+}
+
 #arguments: (usr,pwd)
 #------------------------------------------------------------------------------------------------------------------------------------------
 #variables:
@@ -18,49 +42,6 @@ function insert_player() {
 		return 2 #2 will be used for bad arguments	
 	fi
 	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO login values ('$1', MD5('$2'));")
-	if [[ -z $result ]]; then
-		return 1
-	else
-		return 0
-	fi
-}
-
-#arguments: (word,points,usr_id)
-#	word: the word to be added
-#	points: an integer, which is a calculated number = word_size * 20
-#	usr_id: the id of the logged in usr that wants to add a new word
-#------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (none)
-#return:
-#	0: query was successfull
-#	1: query wasnt successfull
-#------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is the word to add, the second argument is the player's id (logged in)
-#------------------------------------------------------------------------------------------------------------------------------------------
-function insert_word() {
-	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO palabra (palabra, puntos, usr) values ('$1',$2, '$3');")
-
-	if [[ -z $result ]]; then
-		return 1
-	else
-		return 0
-	fi
-}
-
-#arguments: (word_id,score_id)
-#	word_id: id of the word
-#	score_id: the word that is being
-#------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (none)
-#return:
-#	0: query was successfull
-#	1: query wasnt successfull
-#------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is the word guessed id, the second argument is the player's id (logged in)
-#------------------------------------------------------------------------------------------------------------------------------------------
-function insert_word_x_score() {
-	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO palabra_x_puntaje (id_palabra, id_puntaje) values ($1,$2);")
-
 	if [[ -z $result ]]; then
 		return 1
 	else
@@ -91,31 +72,46 @@ function get_word() {
 	fi
 }
 
-#arguments: (score,usr,date,words)
-#	score: new score
-#	usr: the usr_id, a varchar (primary key of login table)
-#	date: the date of the new score
-#	words: the list of words guessed in the session 
-#	game_id: the id of the new score
+#arguments: (word,points,usr_id)
+#	word: the word to be added
+#	points: an integer, which is a calculated number = word_size * 20
+#	usr_id: the id of the logged in usr that wants to add a new word
 #------------------------------------------------------------------------------------------------------------------------------------------
 #variables: (none)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
 #------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is the score to add (end of each game), the second argument is the player's id (logged in), 
-#	the third argument is the date of transaction, the 4th argument is the list of words in the session
+#first argument is the word to add, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
-function insert_score() {
-	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO puntaje (puntaje, usr, date) values ('$1','$2', '$3');")
+function insert_word() {
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO palabra (palabra, puntos, usr) values ('$1',$2, '$3');")
 
 	if [[ -z $result ]]; then
 		return 1
 	else
-		for word in $4; do
-			get_word word $2 #saves the word cols into curr_word var 
-			insert_word_x_score ${curr_word[0]} $5
-		done
+		return 0
+	fi
+}
+
+#arguments: (old_word, new_word, usr_id)
+#	word: the word to be added
+#	usr_id: the id of the logged in player that wants to add a new word
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (result)
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the word to update, the second argument is the player's id (logged in)
+#------------------------------------------------------------------------------------------------------------------------------------------
+function update_word() {
+	local result=$(psql -t -U postgres -d hangman -c "UPDATE palabra SET palabra='$2' WHERE palabra='$1' AND usr='$3'")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		echo $result
 		return 0
 	fi
 
@@ -143,53 +139,57 @@ function delete_word() {
 
 }
 
-#arguments: (old_word, new_word, usr_id)
-#	word: the word to be added
-#	usr_id: the id of the logged in player that wants to add a new word
+#arguments: (word_id,score_id)
+#	word_id: id of the word
+#	score_id: the word that is being
 #------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (result)
+#variables: (none)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
 #------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is the word to update, the second argument is the player's id (logged in)
+#first argument is the word guessed id, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
-function update_word() {
-	local result=$(psql -t -U postgres -d hangman -c "UPDATE palabra SET palabra='$2' WHERE palabra='$1' AND usr='$3'")
+function insert_word_x_score() {
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO palabra_x_puntaje (id_palabra, id_puntaje) values ($1,$2);")
 
 	if [[ -z $result ]]; then
 		return 1
 	else
-		echo $result
+		return 0
+	fi
+}
+
+#arguments: (score,usr,date,words)
+#	score: new score
+#	usr: the usr_id, a varchar (primary key of login table)
+#	date: the date of the new score
+#	words: the list of words guessed in the session 
+#	game_id: the id of the new score
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (none)
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the score to add (end of each game), the second argument is the player's id (logged in), 
+#	the third argument is the date of transaction, the 4th argument is the list of words in the session
+#------------------------------------------------------------------------------------------------------------------------------------------
+function insert_score() {
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO puntaje (puntaje, usr, date) values ('$1','$2', '$3');")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		for word in $4; do
+			get_word $word $2 #saves the word cols into curr_word var 
+			insert_word_x_score ${curr_word[0]} $5
+		done
 		return 0
 	fi
 
 }
 
-
-#this functions is used to log in
-#arguments: (usr,pwd)
-#	usr: the usr id (or nickname) to log in
-#	pwd: the password
-#-------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (player_id)
-#	usr_id: contains the id of the logged in player
-#-------------------------------------------------------------------------------------------------------------------------------------------
-#return:
-#	0: everything was successfull	
-#	1: query wasnt successfull
-function get_player() {
-	local result=$(psql -t -U postgres -d hangman -c "SELECT usr FROM login WHERE usr='$1' AND pwd=MD5('$2');")
-
-	if [[ -z $result ]]; then
-		return 1
-	fi
-
-	#separating each part of the result table as a single line, each column separated by space
-	usr_id=$(echo $result | sed 's/\s|\s/ /g' )
-	
-	return 0
-}
 
 #arguments: (usr_id)
 #	usr_nickname: the id of the usr
