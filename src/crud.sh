@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-#arguments: (nickname,password)
+database_name="hangman"
+usr_max_size=15
+
+#arguments: (usr,pwd)
 #------------------------------------------------------------------------------------------------------------------------------------------
 #variables:
 #	result: contains the tuple result of the psql query
@@ -11,7 +14,11 @@
 #first argument is nickname, second argument is the password (not encrypted)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function insert_player() {
-	result=$(psql -t -U postgres -d hangman_db -c "INSERT INTO player (nickname, password) values ('$1', MD5('$2'));")
+	local usr_size=${#1}
+	if [[ $usr_size > $usr_max_size ]]; then
+		return 2 #2 will be used for bad arguments	
+	fi
+	result=$(psql -t -U postgres -d hangman -c "INSERT INTO player (nickname, password) values ('$1', MD5('$2'));")
 	if [[ -z $result ]]; then
 		return 1
 	else
@@ -32,7 +39,7 @@ function insert_player() {
 #first argument is the word to add, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function insert_word() {
-	result=$(psql -t -U postgres -d hangman_db -c "INSERT INTO word (word, player_id) values ('$1','$2');")
+	result=$(psql -t -U postgres -d hangman -c "INSERT INTO word (word, player_id) values ('$1','$2');")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -55,7 +62,7 @@ function insert_word() {
 #first argument is the word to delete, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function delete_word() {
-	result=$(psql -t -U postgres -d hangman_db -c "DELETE FROM word WHERE word='$1' AND player_id='$2")
+	result=$(psql -t -U postgres -d hangman -c "DELETE FROM word WHERE word='$1' AND player_id='$2")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -78,7 +85,7 @@ function delete_word() {
 #first argument is the word to update, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function update_word() {
-	result=$(psql -t -U postgres -d hangman_db -c "UPDATE word SET word='$2' WHERE word='$1' AND player_id=$3")
+	result=$(psql -t -U postgres -d hangman -c "UPDATE word SET word='$2' WHERE word='$1' AND player_id=$3")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -101,7 +108,7 @@ function update_word() {
 #first argument is the word to update, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function update_score() {
-	result=$(psql -t -U postgres -d hangman_db -c "UPDATE player SET score=$2 WHERE id=$1")
+	result=$(psql -t -U postgres -d hangman -c "UPDATE player SET score=$2 WHERE id=$1")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -122,7 +129,7 @@ function update_score() {
 #	0: everything was successfull	
 #	1: query wasnt successfull
 function get_player() {
-	local result=$(psql -t -U postgres -d hangman_db -c "SELECT id, nickname, score FROM player WHERE nickname='$1' AND password=MD5('$2');")
+	local result=$(psql -t -U postgres -d hangman -c "SELECT id, nickname, score FROM player WHERE nickname='$1' AND password=MD5('$2');")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -158,7 +165,7 @@ function get_player() {
 #	0: everything was successfull	
 #	1: query wasnt successfull
 function get_player_words() {
-	local result=$(psql -t -U postgres -d hangman_db -c "SELECT word FROM word WHERE player_id=$1;")
+	local result=$(psql -t -U postgres -d hangman -c "SELECT word FROM word WHERE player_id=$1;")
 
 	if [[ -z $result ]]; then
 		return 1
