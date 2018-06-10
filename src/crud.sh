@@ -170,7 +170,6 @@ function insert_word_x_score {
 #	score: new score::integer
 #	usr: the usr_id, a varchar (primary key of login table)::string
 #	words: the list of words guessed in the session::list<string> 
-#	game_id: the id of the new score (game session)::integer
 #---------------------------------------------------------------------
 #variables: (none)
 #return:
@@ -182,13 +181,14 @@ function insert_word_x_score {
 #---------------------------------------------------------------------
 function insert_score {
 	local result=$(sql "INSERT INTO puntaje (puntaje, usr) values ('$1','$2');")
+	local last_score=$(sql "SELECT id_puntaje from puntaje WHERE usr=$2 order by id DESC LIMIT 1;")
+	id_list=("$3");
 
 	if [[ -z $result ]]; then
 		return 1
 	else
-		for word in $3; do
-			get_word $word $2 #saves the word cols into curr_word var 
-			insert_word_x_score ${curr_word[0]} $4
+		for id in $id_list; do
+			insert_word_x_score "$id" "$(echo last_score | sed s/\s//g)";
 		done
 		return 0
 	fi
@@ -204,10 +204,9 @@ function get_scores {
 	local result="$(sql "SELECT usr, puntaje, fecha from puntaje ORDER BY puntaje DESC;")"
 	if [[ -z "$result" ]]; then
 		return 1;
-	else
+	fi
 		echo "$result" | sed 's/\s|\s/ /g';
 		return 0;
-	fi
 }
 
 #arguments: (usr, order)
@@ -220,10 +219,9 @@ function get_user_scores {
 	local result="$(sql "SELECT puntaje, fecha from puntaje WHERE usr='$1' ORDER BY $2 DESC")"
 	if [[ -z "$result" ]]; then
 		return 1;
-	else
-		echo "$result" | sed 's/\s|\s/ /g';
-		return 0;
 	fi
+	echo "$result" | sed 's/\s|\s/ /g';
+	return 0;
 }
 
 
@@ -237,14 +235,12 @@ function get_user_scores {
 #	0: everything was successfull	
 #	1: query wasnt successfull
 function get_player_words {
-	local result=$(sql "SELECT palabra FROM palabra WHERE usr='$1';")
+	local result=$(sql "SELECT palabra, puntos, id_palabra FROM palabra WHERE usr='$1';");
 
 	if [[ -z $result ]]; then
-		return 1
+		return 1;
 	fi
 
-	#variable to hold player's words
-	curr_usr_words=($(echo $result | sed 's/\s|\s/\n/g'))
-
-	return 0
+	echo $result | sed 's/\s|\s/-/g';
+	return 0;
 }
