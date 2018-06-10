@@ -32,11 +32,11 @@ function show_progress {
 	echo "points left: $2";
 }
 
+# score is in global scope, defined in hangman
 function do_round {
-	local word word_aux score;
+	local word word_aux;
 	word="$1";
 	word_aux="${word//[A-Za-z0-9]/_}";
-	score="$2";
 
 	while [[ "$score" -gt 0 && "$word_aux" != "$word" ]]; do
 		show_progress "$word_aux" "$score";
@@ -53,20 +53,19 @@ function do_round {
 
 	# show menu one last time
 	show_progress "$score";
-	if [[ "$word_aux" == "$word" ]]; then
-		score=$(($score + $2));
-		return $(($score));
-	elif [[ "$score" -eq 0 ]]; then
-		return 0;
-	fi
 }
 
 
 function hangman {
-	local score words words_ids;
+	local words words_ids;
 	score=0;
 	words=($(get_player_words "$1"));
 	word_ids=();
+	if [[ -z "$words" ]]; then
+		echo "can't play with no words!"
+		read -n1 -p "Press any key to continue..."
+		return 1;
+	fi
 
 	continue="y";
 	while [[ $continue == "y" ]]; do
@@ -74,9 +73,14 @@ function hangman {
 		params=($(echo ${words[$word_index]} | sed 's/-/\ /g'));
 		word_ids+=(${params[2]});
 
-		do_round "${params[0]}" $(("$score" + "${params[1]}"));
-		score=$(("$score" + "$?"));
-		read -n1 -p "continue? (y/n): " continue;
+		score=$(("$score" + "${params[1]}"));
+		do_round "${params[0]}" "$score";
+		if [[ "$score" -eq 0 ]]; then
+			echo "You lost!";
+			continue="n";
+		else
+			read -n1 -p "continue? (y/n): " continue;
+		fi
 	done	
 
 	insert_score "$score" "$1" "$word_ids";
