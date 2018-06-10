@@ -6,19 +6,18 @@ usr_max_size=15
 #arguments: (usr,pwd)
 #------------------------------------------------------------------------------------------------------------------------------------------
 #variables:
-#	result: contains the tuple result of the psql query
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
 #------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is nickname, second argument is the password (not encrypted)
+#first argument is username, second argument is the password (not encrypted)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function insert_player() {
 	local usr_size=${#1}
 	if [[ $usr_size > $usr_max_size ]]; then
 		return 2 #2 will be used for bad arguments	
 	fi
-	result=$(psql -t -U postgres -d hangman -c "INSERT INTO player (nickname, password) values ('$1', MD5('$2'));")
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO login values ('$1', MD5('$2'));")
 	if [[ -z $result ]]; then
 		return 1
 	else
@@ -26,12 +25,12 @@ function insert_player() {
 	fi
 }
 
-#arguments: (word,player_id)
+#arguments: (word,points,usr_id)
 #	word: the word to be added
-#	player_id: the id of the logged in player that wants to add a new word
+#	points: an integer, which is a calculated number = word_size * 20
+#	usr_id: the id of the logged in usr that wants to add a new word
 #------------------------------------------------------------------------------------------------------------------------------------------
-#variables:
-#	result: contains the tuple result of the psql query
+#variables: (none)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
@@ -39,22 +38,94 @@ function insert_player() {
 #first argument is the word to add, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function insert_word() {
-	result=$(psql -t -U postgres -d hangman -c "INSERT INTO word (word, player_id) values ('$1','$2');")
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO palabra (palabra, puntos, usr) values ('$1',$2, '$3');")
 
 	if [[ -z $result ]]; then
 		return 1
 	else
 		return 0
 	fi
+}
+
+#arguments: (word_id,score_id)
+#	word_id: id of the word
+#	score_id: the word that is being
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (none)
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the word guessed id, the second argument is the player's id (logged in)
+#------------------------------------------------------------------------------------------------------------------------------------------
+function insert_word_x_score() {
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO palabra_x_puntaje (id_palabra, id_puntaje) values ($1,$2);")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+#arguments: (word,usr_id)
+#	word: content of word to be found
+#	usr_id: usr id that owns the word
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (curr_word)
+#	curr_word: word found returned as a list of strings
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the word guessed id, the second argument is the player's id (logged in)
+#------------------------------------------------------------------------------------------------------------------------------------------
+function get_word() {
+	local result=$(psql -t -U postgres -d hangman -c "SELECT * FROM palabra WHERE palabra='$1' AND usr='$2'")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		curr_word=($(echo $result | sed 's/\s|\s/\n/g'))
+		return 0
+	fi
+}
+
+#arguments: (score,usr,date,words)
+#	score: new score
+#	usr: the usr_id, a varchar (primary key of login table)
+#	date: the date of the new score
+#	words: the list of words guessed in the session 
+#	game_id: the id of the new score
+#------------------------------------------------------------------------------------------------------------------------------------------
+#variables: (none)
+#return:
+#	0: query was successfull
+#	1: query wasnt successfull
+#------------------------------------------------------------------------------------------------------------------------------------------
+#first argument is the score to add (end of each game), the second argument is the player's id (logged in), 
+#	the third argument is the date of transaction, the 4th argument is the list of words in the session
+#------------------------------------------------------------------------------------------------------------------------------------------
+function insert_score() {
+	local result=$(psql -t -U postgres -d hangman -c "INSERT INTO puntaje (puntaje, usr, date) values ('$1','$2', '$3');")
+
+	if [[ -z $result ]]; then
+		return 1
+	else
+		for word in $4; do
+			get_word word $2 #saves the word cols into curr_word var 
+			insert_word_x_score ${curr_word[0]} $5
+		done
+		return 0
+	fi
 
 }
 
-#arguments: (word,player_id)
-#	word: the word to be added
-#	player_id: the id of the logged in player that wants to add a new word
+#arguments: (word,usr_id)
+#	word: the word to be deleted
+#	usr_id: the id of the logged in player that wants to add a new word (varchar)
 #------------------------------------------------------------------------------------------------------------------------------------------
-#variables:
-#	result: contains the tuple result of the psql query
+#variables: (none)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
@@ -62,7 +133,7 @@ function insert_word() {
 #first argument is the word to delete, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function delete_word() {
-	result=$(psql -t -U postgres -d hangman -c "DELETE FROM word WHERE word='$1' AND player_id='$2")
+	local result=$(psql -t -U postgres -d hangman -c "DELETE FROM palabra WHERE palabra='$1' AND usr='$2';")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -72,12 +143,11 @@ function delete_word() {
 
 }
 
-#arguments: (old_word, new_word, player_id)
+#arguments: (old_word, new_word, usr_id)
 #	word: the word to be added
-#	player_id: the id of the logged in player that wants to add a new word
+#	usr_id: the id of the logged in player that wants to add a new word
 #------------------------------------------------------------------------------------------------------------------------------------------
-#variables:
-#	result: contains the tuple result of the psql query
+#variables: (result)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
@@ -85,7 +155,7 @@ function delete_word() {
 #first argument is the word to update, the second argument is the player's id (logged in)
 #------------------------------------------------------------------------------------------------------------------------------------------
 function update_word() {
-	result=$(psql -t -U postgres -d hangman -c "UPDATE word SET word='$2' WHERE word='$1' AND player_id=$3")
+	local result=$(psql -t -U postgres -d hangman -c "UPDATE palabra SET palabra='$2' WHERE palabra='$1' AND usr='$3'")
 
 	if [[ -z $result ]]; then
 		return 1
@@ -96,88 +166,49 @@ function update_word() {
 
 }
 
-#arguments: (player_id, new_score)
-#	player_id: id of the player to update score
-#	new_score: new score of the player
-#------------------------------------------------------------------------------------------------------------------------------------------
-#variables:
-#return:
-#	0: query was successfull
-#	1: query wasnt successfull
-#------------------------------------------------------------------------------------------------------------------------------------------
-#first argument is the word to update, the second argument is the player's id (logged in)
-#------------------------------------------------------------------------------------------------------------------------------------------
-function update_score() {
-	result=$(psql -t -U postgres -d hangman -c "UPDATE player SET score=$2 WHERE id=$1")
 
-	if [[ -z $result ]]; then
-		return 1
-	else
-		return 0
-	fi
-
-}
-
-#arguments: (nickname,password)
+#this functions is used to log in
+#arguments: (usr,pwd)
+#	usr: the usr id (or nickname) to log in
+#	pwd: the password
 #-------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (player_id, player_nickname, player_score)
-#	player_id: contains the player id
-#	player_nickname: contains the nickname of the player
-#	player_score: contains the player score
+#variables: (player_id)
+#	usr_id: contains the id of the logged in player
 #-------------------------------------------------------------------------------------------------------------------------------------------
 #return:
 #	0: everything was successfull	
 #	1: query wasnt successfull
 function get_player() {
-	local result=$(psql -t -U postgres -d hangman -c "SELECT id, nickname, score FROM player WHERE nickname='$1' AND password=MD5('$2');")
+	local result=$(psql -t -U postgres -d hangman -c "SELECT usr FROM login WHERE usr='$1' AND pwd=MD5('$2');")
 
 	if [[ -z $result ]]; then
 		return 1
 	fi
 
 	#separating each part of the result table as a single line, each column separated by space
-	local result_list=$(echo $result | sed 's/\s|\s/ /g' )
-
-	#getting player variables
-	local i=0
-	for var in $result_list; do
-		if [[ $i == 0 ]]; then
-			player_id=$var
-		elif [[ $i == 1 ]]; then
-			player_nickname=$var
-		else
-			player_score=$var
-		fi
-
-		i=$(($i + 1))
-	done
-
+	usr_id=$(echo $result | sed 's/\s|\s/ /g' )
+	
 	return 0
 }
 
-#arguments: (player_id)
-#	player_nickname: the id of the player
+#arguments: (usr_id)
+#	usr_nickname: the id of the usr
 #-------------------------------------------------------------------------------------------------------------------------------------------
-#variables: (player_id)
-#	player_id: id of the player
+#variables: (usr_words)
+#	curr_usr_words: a list of the usr words (only the string content (column 'palabra'))
 #-------------------------------------------------------------------------------------------------------------------------------------------
 #return:
 #	0: everything was successfull	
 #	1: query wasnt successfull
 function get_player_words() {
-	local result=$(psql -t -U postgres -d hangman -c "SELECT word FROM word WHERE player_id=$1;")
+	local result=$(psql -t -U postgres -d hangman -c "SELECT palabra FROM palabra WHERE usr='$1';")
 
 	if [[ -z $result ]]; then
 		return 1
 	fi
 
 	#variable to hold player's words
-	player_words=($(echo $result | sed 's/\s|\s/\n/g'))
+	curr_usr_words=($(echo $result | sed 's/\s|\s/\n/g'))
 
 	return 0
 }
-
-#examples to get player id, nickname and score after executing get_player(nickname, password)
-#echo $player_id
-#echo $player_nickname
-#echo $player_score
