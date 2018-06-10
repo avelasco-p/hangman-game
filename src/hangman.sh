@@ -7,7 +7,7 @@ source "$DIR/util.sh"
 source "$DIR/game.sh"
 
 function user_menu {
-	local opt, word;
+	local opt, input;
 	clear;
 	draw_logo;
 	echo -e "\nWelcome: $1"
@@ -26,12 +26,17 @@ function user_menu {
 			read -n1 -p "Press any key to continue...";
 			;;
 		5)
-			read -p "Insert a new word: " word;
-			insert_word "$word" "$1";
-			if [[ "$?" -eq 0 ]]; then
-				echo "Word added successfully";
-				sleep 1;
-			fi
+			read -p "Insert a new word: " input;
+			insert_word "$input" "$1";
+			[[ "$?" -eq 0 ]] && echo "Word added successfully";
+			sleep 1;
+			;;
+		6)
+			echo "$(sql "SELECT id_palabra, palabra from palabra where usr='$1'")";
+			read -p "Input the id to delete: " input;
+			delete_word "$input" "$1";
+			[[ "$?" -eq 0 ]] && echo "Word deleted successfully";
+			sleep 1;
 			;;
 		0) exit 0 ;;
 		*) echo "not a valid option" ;;
