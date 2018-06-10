@@ -10,7 +10,7 @@ function login_loop {
 
 function register {
 	read -p "enter your nickname: " nickname;
-	read -s -p "enter your passwod: " passwd;
+	read -s -p "enter your password: " passwd;
 	insert_player "$nickname" "$passwd";
 	return $?;
 }
