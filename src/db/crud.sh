@@ -216,7 +216,7 @@ function get_scores {
 #	1: query wasnt successfull
 #---------------------------------------------------------------------
 function get_user_scores {
-	local result="$(sql "SELECT puntaje, fecha from puntaje WHERE usr='$1' ORDER BY $2 DESC")"
+	local result="$(sql "SELECT puntaje, date_trunc('seconds', fecha) from puntaje WHERE usr='$1' ORDER BY $2 DESC")"
 	if [[ -z "$result" ]]; then
 		return 1;
 	fi
