@@ -19,7 +19,7 @@ function sql {
 #	usr_id: contains the id of the logged in player
 #----------------------------------------------------------------------
 #return:
-#	0: everything was successfull	
+#	0: everything was successfull
 #	1: query wasnt successfull
 function get_player {
 	local result="$(sql "SELECT usr FROM login WHERE usr='$1' AND pwd=MD5('$2');")";
@@ -31,7 +31,7 @@ function get_player {
 	# separating each part of the result table as
 	# a single line, each column separated by space
 	echo "$result" | sed 's/\s|\s/ /g' | sed 's/\s//g';
-	
+
 	return 0;
 }
 
@@ -169,14 +169,14 @@ function insert_word_x_score {
 #arguments: (score,usr,date,words)
 #	score: new score::integer
 #	usr: the usr_id, a varchar (primary key of login table)::string
-#	words: the list of words guessed in the session::list<string> 
+#	words: the list of words guessed in the session::list<string>
 #---------------------------------------------------------------------
 #variables: (none)
 #return:
 #	0: query was successfull
 #	1: query wasnt successfull
 #---------------------------------------------------------------------
-#first argument is the score to add (end of each game), the second argument is the player's id (logged in), 
+#first argument is the score to add (end of each game), the second argument is the player's id (logged in),
 #	the third argument is the date of transaction, the 4th argument is the list of words in the session
 #---------------------------------------------------------------------
 function insert_score {
@@ -201,7 +201,7 @@ function insert_score {
 #	1: query wasnt successfull
 #---------------------------------------------------------------------
 function get_scores {
-	local result="$(sql "SELECT usr, puntaje from puntaje ORDER BY puntaje DESC;")"
+	local result="$(sql "SELECT usr, SUM(puntaje) AS PUNTAJE from puntaje GROUP BY usr ORDER BY puntaje DESC;")"
 	if [[ -z "$result" ]]; then
 		return 1;
 	fi
@@ -232,7 +232,7 @@ function get_user_scores {
 #	curr_usr_words: a list of the usr words (only the string content (column 'palabra'))
 #----------------------------------------------------------------------
 #return:
-#	0: everything was successfull	
+#	0: everything was successfull
 #	1: query wasnt successfull
 function get_player_words {
 	local result=$(sql "SELECT palabra, puntos, id_palabra FROM palabra WHERE usr='$1';");
