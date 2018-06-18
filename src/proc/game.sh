@@ -76,7 +76,7 @@ function do_round {
 function hangman {
 	local words words_ids;
 	score=0;
-	words=($(get_player_words "$1"));
+	words=($(get_all_words));
 	word_ids=();
 	if [[ -z "$words" ]]; then
 		echo "can't play with no words!"

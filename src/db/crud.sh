@@ -244,3 +244,22 @@ function get_player_words {
 	echo $result | sed 's/\s|\s/-/g';
 	return 0;
 }
+
+#arguments: (none)
+#----------------------------------------------------------------------
+#variables: (usr_words)
+#	curr_usr_words: a list of the usr words (only the string content (column 'palabra'))
+#----------------------------------------------------------------------
+#return:
+#	0: everything was successfull
+#	1: query wasnt successfull
+function get_all_words {
+	local result=$(sql "SELECT palabra, puntos, id_palabra FROM palabra;");
+
+	if [[ -z $result ]]; then
+		return 1;
+	fi
+
+	echo $result | sed 's/\s|\s/-/g';
+	return 0;
+}
