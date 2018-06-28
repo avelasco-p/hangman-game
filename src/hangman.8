@@ -1,0 +1,88 @@
+.\" Manpage for hangman
+.TH man 8 "27 jun 2018" "1.0" "hangman manpage"
+.SH NOMBRE
+hangman \- juego de ahorcado
+.SH SINOPSIS
+hangman
+.SH DESCRIPCIÓN
+hangman es el clásico juego de ahorcado creado para ejecutarse en sistemas
+*NIX. Este hará uso de una base de datos PostgreSQL para almacenar los
+puntajes.
+
+.SH INSTALACIÓN
+Ejecute el comando setup.sh con la secuencia descrita acontinuación
+
+setup.sh database
+
+setup.sh install
+
+.SH PANTALLA DE INICIO
+.BI 1.Login:
+
+iniciar sesión y cargar la partida correspondiente.
+Es necesario registrarse con anterioridad para que hangman guarde
+la partida y nuestro historial de juego.
+
+.BI 2.Register:
+
+registrar un nuevo usuario para jugar hangman, es útil cuando varias
+personas utilizan la misma máquina. Así podemos llevar un conteo de nuestro
+puntaje por separado.
+
+.BI 3.See\ scores:
+
+ver puntuaciones. Acá podemos ver las puntuaciones totales de los jugadores
+registrados y que han jugado por lo menos una partida.
+
+.BI 0.EXIT:
+
+salir del juego.
+
+.SH PANTALLA DE JUEGO
+Esta pantalla aparece una vez iniciamos sesión en hangman.
+
+.BI 1.Play:
+
+Empezar la partida de ahorcado. De no exitir palabras en la base de datos
+aparecerá un mensaje de alerta. Puede utilizar la opción
+.BI 5.
+para agregar palabras a la base de datos.
+La mecánica del juego consiste en escoger una serie de letras que conforman
+una palabra completa, si se escoge una letra que no está presenta en la palabra
+se agregarán más piezas del 'hombre ahorcado' y se restarán puntos de nuestro
+total. Cada letra vale 20 puntos, por lo que si tenemos la palabra codigo,
+serán 6 letras por 20 puntos, otorgándonos un total de 120 en total. Un
+error al escoger la letra resultará en una penalización de 10 puntos por
+error.
+
+.BI 2.See\ my\ scores\ (date)
+
+Ver las puntuaciones por fecha.
+
+.BI 3.See\ my\ scores\ (high\ score)
+
+Ver las puntuaciones máximas totales.
+
+.BI 4.See\ all\ scores
+
+Ver las puntuaciones totalas sin agrupamiento.
+
+.BI 5.Add\ a\ word
+Agregar nuevas palabras a la base de datos del ahorcado.
+
+.BI 6.Remove\ a\ word
+
+Eliminar una palabra del diccionario de ahorcado.
+
+.BI 0.Exit
+Salir del juego.
+
+.SH AUTORES
+
+.BI "Carlos Fernando Vasquez Morataya - 00060414@uca.edu.sv"
+
+.BI "Regina Beatriz Viscarra Cortez - 00060514@uca.edu.sv"
+
+.BI "Alejandro Enrique Velasco Palacios - 00036514@uca.edu.sv"
+
+.BI "Rafael Ernesto Pérez Alejo - 00048215@uca.edu.sv"
