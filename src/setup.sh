@@ -13,6 +13,8 @@ function setup {
 			;;
 		"install")
 			sudo ln -s $DIR/hangman.sh /usr/local/bin/hangman;
+			sudo mkdir -p /usr/local/man/man8;
+			sudo ln -s $DIR/hangman.8 /usr/local/man/man8/hangman.8;
 			echo "done...";
 			return 0;
 			;;
